@@ -1,0 +1,38 @@
+version: "3"
+services:
+  drupal:
+    image: "drupal"
+    restart: "always"
+    ports:
+      - "${DRUPAL_HTTP_PORT}:80"
+    volumes:
+      - "${APP_CODE_PATH_HOST}/modules:/var/www/html/modules"
+      - "${APP_CODE_PATH_HOST}/sites:/var/www/html/sites"
+      - "${APP_CODE_PATH_HOST}/profiles:/var/www/html/profiles"
+      - "${APP_CODE_PATH_HOST}/themes:/var/www/html/themes"
+  mysql:
+    image: "deckapp/mysql:v10.1.19"
+    environment:
+      - "MYSQL_DATABASE=${MYSQL_DATABASE}"
+      - "MYSQL_USER=${MYSQL_USER}"
+      - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - "${DATA_PATH_HOST}/mysql:/var/lib/mysql"
+      - "./mysql:/etc/mysql/"
+    ports:
+      - "${MYSQL_PORT}:3306"
+  phpmyadmin:
+    build: "./phpmyadmin"
+    environment:
+      - "PMA_ARBITRARY=1"
+      - "MYSQL_USER=${MYSQL_USER}"
+      - "MYSQL_PASSWORD=${MYSQL_PASSWORD}"
+      - "MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}"
+    ports:
+      - "${PMA_PORT}:80"
+volumes:
+  mysql:
+    driver: "${VOLUMES_DRIVER}"
+  phpmyadmin:
+    driver: "${VOLUMES_DRIVER}"
