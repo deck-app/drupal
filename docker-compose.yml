@@ -1,36 +1,28 @@
 version: '3'
 services:
   drupal:
-    build: 
-      context: './drupal'
-    restart: 'always'
-    ports:
-      - '${DRUPAL_HTTP_PORT}:80'
-    volumes:
-      - '${APP_CODE_PATH_HOST}/modules:/var/www/html/modules'
-      - '${APP_CODE_PATH_HOST}/sites:/var/www/html/sites'
-      - '${APP_CODE_PATH_HOST}/profiles:/var/www/html/profiles'
-      - '${APP_CODE_PATH_HOST}/themes:/var/www/html/themes'
-  mysql:
     build:
-      context: ./mysql
-    environment:
-      - 'MYSQL_DATABASE=${DB_NAME}'
-      - 'MYSQL_USER=${DB_USER}'
-      - 'MYSQL_PASSWORD=${DB_PASSWORD}'
-      - 'MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}'
+      context: '${BACK_END}'
+      dockerfile: 'Dockerfile-${PHP_VERSION}'
+      args:
+        - 'BACK_END=${BACK_END}'
+        - 'PHP_VERSION=${PHP_VERSION}'
+        - 'DISPLAY_PHPERROR=${DISPLAY_PHPERROR}'
+        - 'XDEBUG=${XDEBUG}'
+        - 'DRUPAL_INSTALL=${DRUPAL_INSTALL}'
     volumes:
-      - '${DATA_PATH_HOST}/mysql:/app'
-      - '${MYSQL_PATH}/my.cnf:/etc/mysql/my.cnf'
+      - '${APP_CODE_PATH_HOST}:${APP_CODE_PATH_DRUPAL}${APP_CODE_CONTAINER_FLAG}'
     ports:
-      - '${MYSQL_PORT}:3306'
-  phpmyadmin:
-    build: './phpmyadmin'
+      - '${DRUPAL_HOST_HTTP_PORT}:80'
+  mariadb:
+    image: mariadb:${MARIADB_VERSION}
     environment:
-      - 'PMA_ARBITRARY=1'
-      - 'MYSQL_USER=${DB_USER}'
-      - 'MYSQL_PASSWORD=${DB_PASSWORD}'
-      - 'MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}'
+      - 'MARIADB_DATABASE=${DB_NAME}'
+      - 'MARIADB_USER=${DB_USER}'
+      - 'MARIADB_PASSWORD=${DB_PASSWORD}'
+      - 'MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}'
+    volumes:
+      - '${DATA_PATH_HOST}:/var/lib/mysql'
     ports:
-      - '${PMA_PORT}:80'
-
+      - ${MYSQL_PORT}:3306
+volumes: {}
