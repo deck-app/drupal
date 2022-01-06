@@ -11,7 +11,10 @@ elif [ {DRUPAL_INSTALL} = false ];
 then   
     cd /var/www
     mv /app/drupal-* /app/drupal
+    echo " Copying file...."
     ln -sf /app/drupal/* /var/www/
+    cp -s -v -R /app/drupal/* /var/www/
+    # ln -sf /app/drupal/* /var/www/
     chown -R nginx:nginx /app/drupal/
     cp /app/drupal/sites/default/default.settings.php /app/drupal/sites/default/settings.php
     chmod -R 777 /app/drupal/sites/default/
