@@ -50,18 +50,20 @@ user:
     target:
       DRUPAL_INSTALL
     
-  # mysql_version:
-  #   label:
-  #     MySQL version
-  #   hint:
-  #     Select MySQL version
-  #   type:
-  #     select
-  #   values:
-  #     - "5.0"
-  #     - "7.0"
-  #   target:
-  #     MYSQL_VERSION
+  MariaDB_version:
+    label:
+      MariaDB version
+    hint:
+      Select a MariaDB version from the list above
+    type:
+      select
+    values:
+      - latest
+      - 10.7
+      - 10.6
+      - 10.5
+    target:
+      MARIADB_VERSION
 
   # customize_server_root_path:
   #   label:
