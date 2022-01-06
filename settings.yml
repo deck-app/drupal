@@ -1,27 +1,55 @@
 #User defined
 user:
-  # backend_ws:
-  #   label:
-  #     Backend webserver
-  #   hint:
-  #     Select a backend webserver
-  #   type:
-  #     select
-  #   values:
-  #     - apache
-  #     - fpm
-  #   target:
-  #     MAUTIC_HTTP_SERVER
+  back_end:
+    label:
+      Backend
+    hint:
+      Select a backend from the list above
+    type:
+      select
+    values:
+      - apache
+      - nginx
+    target:
+      BACK_END
+  php_version:
+    label:
+      PHP version
+    hint:
+      Select a PHP version from the list above
+    type:
+      select
+    values:
+      - 7.4
+      - "8.0"
+    target:
+      PHP_VERSION
 
-  # run_cron:
-  #   label:
-  #     Run cron jobs?
-  #   type:
-  #     checkbox
-  #   hint:
-  #     Check to enable cron jobs
-  #   target:
-  #     MAUTIC_RUN_CRON
+  php_error_reporting:
+    label:
+      Enable PHP error reporting?
+    type:
+      checkbox
+    hint: Check the box to display PHP errors 
+    target:
+      DISPLAY_PHPERROR
+  php_xdebug:
+    label:
+      Enable PHP extension XDEBUG?
+    type:
+      checkbox
+    hint: Check the box to display extension xdebug
+    target:
+      XDEBUG
+  drupal_install:
+    label:
+      DO NOT install Drupal
+    type:
+      checkbox
+    hint: Incase you have a Drupal project already installed at the selected path
+    target:
+      DRUPAL_INSTALL
+    
   # mysql_version:
   #   label:
   #     MySQL version
@@ -35,6 +63,18 @@ user:
   #   target:
   #     MYSQL_VERSION
 
+  # customize_server_root_path:
+  #   label:
+  #     Server root
+  #   type:
+  #     input
+  #   values:
+  #     /var/www
+  #   hint:
+  #     Server document root
+  #   target:
+      # SERVER_ROOT
+
 #System defaults
 system:
   show_localpath_selector:
@@ -45,7 +85,5 @@ system:
     true
   #Generate public ports for the docker image
   ports:
-    http: DRUPAL_HTTP_PORT
-    others:
-      - MYSQL_PORT
-      - PMA_PORT
+    http:
+      DRUPAL_HOST_HTTP_PORT
