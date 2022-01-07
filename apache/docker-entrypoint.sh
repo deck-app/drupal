@@ -12,12 +12,12 @@ then
     cd /var/www
     mv /app/drupal-* /app/drupal
     echo " Copying file...."
-    ln -sf /app/drupal/* /var/www/
-    cp -s -v -R /app/drupal/* /var/www/
     # ln -sf /app/drupal/* /var/www/
-    chown -R nginx:nginx /app/drupal/
-    cp /app/drupal/sites/default/default.settings.php /app/drupal/sites/default/settings.php
-    chmod -R 777 /app/drupal/sites/default/
+    rsync -aP -f'+ /*' -f'+ *' /app/drupal/* /var/www/
+    # ln -sf /app/drupal/* /var/www/
+    chown -R nginx:nginx /var/www/
+    cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
+    chmod -R 777 /var/www/sites/default/
 fi
 cp /app/default.conf /etc/nginx/conf.d/default.conf
 nginx -s reload

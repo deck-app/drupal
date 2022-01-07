@@ -11,10 +11,11 @@ elif [ {DRUPAL_INSTALL} = false ];
 then   
     cd /var/www
     mv /app/drupal-* /app/drupal
-    ln -s /app/drupal/* /var/www/
-    chown -R nginx:nginx /app/drupal/
-    cp /app/drupal/sites/default/default.settings.php /app/drupal/sites/default/settings.php
-    chmod -R 777 /app/drupal/sites/default/
+    # ln -s /app/drupal/* /var/www/
+    rsync -aP -f'+ /*' -f'+ *' /app/drupal/* /var/www/
+    chown -R nginx:nginx /var/www/
+    cp /var/www//sites/default/default.settings.php /var/www//sites/default/settings.php
+    chmod -R 777 /var/www//sites/default/
 fi
 cp /app/default.conf /etc/nginx/conf.d/default.conf
 nginx -s reload
