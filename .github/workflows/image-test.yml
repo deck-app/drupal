@@ -38,6 +38,7 @@ jobs:
       run:  docker exec drupal_drupal_1 ls -la /app/
     - name: Application Install
       run:  |
+        docker exec drupal_drupal_1 rsync -aP -f'+ /*' -f'+ *' /app/drupal/* /var/www/
         docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
         docker exec drupal_drupal_1 cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
     - name: Directory Permissions
