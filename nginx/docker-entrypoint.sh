@@ -14,8 +14,8 @@ then
     # ln -s /app/drupal/* /var/www/
     rsync -aP -f'+ /*' -f'+ *' /app/drupal/* /var/www/
     chown -R nginx:nginx /var/www/
-    cp /var/www//sites/default/default.settings.php /var/www//sites/default/settings.php
-    chmod -R 777 /var/www//sites/default/
+    cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
+    chmod -R 777 /var/www/sites/default/
 fi
 cp /app/default.conf /etc/nginx/conf.d/default.conf
 nginx -s reload
