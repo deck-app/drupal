@@ -36,7 +36,7 @@ if [[ {BACK_END} = nginx  ]] ;
 then
     chown -R nobody:nobody /var/www
 else
-    chown -R nobody:nobody /var/www
+    chown -R apache:apache /var/www
 fi
 
 rm -rf /var/preview
