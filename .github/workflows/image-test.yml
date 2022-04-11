@@ -4,9 +4,9 @@ on:
   schedule:
   - cron:  '30 9 * * *'
   push:
-    branches: [ master ]
+    branches: [ v4 ]
   pull_request:
-    branches: [ master ]
+    branches: [ v4 ]
 
 jobs:
   Nginx-php8-drupal-AMD64:
@@ -40,7 +40,6 @@ jobs:
       run:  |
         docker exec drupal_drupal_1 cp -a /app/drupal/* /var/www/
         docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
-        docker exec drupal_drupal_1 cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
     - name: Directory Permissions
       run:  docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/sites/default/
     - name: Root Path change
