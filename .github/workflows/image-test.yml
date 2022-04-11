@@ -4,9 +4,9 @@ on:
   schedule:
   - cron:  '30 9 * * *'
   push:
-    branches: [ v4 ]
+    branches: [ master ]
   pull_request:
-    branches: [ v4 ]
+    branches: [ master ]
 
 jobs:
   Nginx-php81-drupal-AMD64:
