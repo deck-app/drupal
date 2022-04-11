@@ -2,25 +2,25 @@ name: Drupal
 
 on:
   schedule:
-  - cron:  '30 9,21 * * *'
+  - cron:  '30 9 * * *'
   push:
-    branches: [ master ]
+    branches: [ v4 ]
   pull_request:
-    branches: [ master ]
+    branches: [ v4 ]
 
 jobs:
-  Nginx-php8-drupal-AMD64:
+  Nginx-php81-drupal-AMD64:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Build the Docker image nginx, php 8.0 and Drupal
+    - name: Build the Docker image nginx, php 8.1 and Drupal
       run: docker-compose -f "docker-compose.yml" up -d --build
       env:
-        PHP_VERSION: "8.0"
+        PHP_VERSION: "8.1"
         BACK_END: nginx
         XDEBUG: true
         DISPLAY_PHPERROR: true
-        SERVER_ROOT:  /var/www/public
+        SERVER_ROOT:  /var/www
         APP_CODE_PATH_HOST: /tmp/drupal
         DB_NAME:  test
         DB_USER:  admin
@@ -38,748 +38,543 @@ jobs:
       run:  docker exec drupal_drupal_1 ls -la /app/
     - name: Application Install
       run:  |
-        docker exec drupal_drupal_1 cp -a /app/drupal/* /var/www/
         docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
-        docker exec drupal_drupal_1 cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
-    - name: Directory Permissions
-      run:  docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/sites/default/
-    - name: Root Path change
-      run:  |
-        docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-        docker exec drupal_drupal_1 pkill -9 php
-        docker exec drupal_drupal_1 nginx -s reload
     - name: Root path check
       run: |
         docker exec drupal_drupal_1 ls -la
         docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
     - name: Durpal application test
       run:  |
-        curl -i http://localhost:5647/
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
     - name: Destroy container and file
       run:  |
         docker-compose down
+        echo "y" | docker image prune -a
         sudo rm -rf /tmp/db
         sudo rm -rf /tmp/drupal
+  Nginx-php81-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image nginx, php 8.1 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.1"
+        BACK_END: nginx
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
         echo "y" | docker image prune -a
-  # Nginx-php8-laravel8-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 8.0 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 mv /app/drupal-* /app/drupal
-  #       docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
-  #       docker exec drupal_drupal_1 cp /var/www/sites/default/default.settings.php /var/www/sites/default/settings.php
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/sites/default/
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:5647/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-
-  # Nginx-php8-laravel7-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 8.0 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Nginx-php8-laravel7-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 8.0 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
   
-  # Nginx-php7-laravel8-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 7.4 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Nginx-php7-laravel8-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 7.4 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-
-  # Nginx-php7-laravel7-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 7.4 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Nginx-php7-laravel7-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image nginx, php 7.4 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: nginx
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chmod -R 777 storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-  #       docker exec drupal_drupal_1 pkill -9 php
-  #       docker exec drupal_drupal_1 nginx -s reload
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-
-
-  # Apache-php8-laravel8-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 8.0 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Documenty root change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Apache-php8-laravel8-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 8.0 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Documenty root change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-
-  # Apache-php8-laravel7-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 8.0 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Apache-php8-laravel7-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 8.0 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "8.0"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
+  Nginx-php8-drupal-AMD64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image nginx, php 8.0 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.0"
+        BACK_END: nginx
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www/
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal_drupal_1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal_drupal_1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal_drupal_1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal_drupal_1 composer
+    - name: Folder check
+      run:  docker exec drupal_drupal_1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  Nginx-php8-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image nginx, php 8.0 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.0"
+        BACK_END: nginx
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
   
-  # Apache-php7-laravel8-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 7.4 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Apache-php7-laravel8-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 7.4 and laravel 8
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 8
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^8.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
+  Nginx-php7-drupal-AMD64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image nginx, php 7.4 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "7.4"
+        BACK_END: nginx
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www/
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal_drupal_1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal_drupal_1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal_drupal_1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal_drupal_1 composer
+    - name: Folder check
+      run:  docker exec drupal_drupal_1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  Nginx-php7-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image nginx, php 7.4 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "7.4"
+        BACK_END: nginx
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R nobody:nobody /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/nginx/conf.d/default.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
 
-  # Apache-php7-laravel7-AMD64:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 7.4 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-  # Apache-php7-laravel7-ARM64:
-  #   runs-on: self-hosted
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image Apache, php 7.4 and laravel 7
-  #     run: docker-compose -f "docker-compose.yml" up -d --build
-  #     env:
-  #       PHP_VERSION: "7.4"
-  #       LARAVEL_VERSION: 7
-  #       BACK_END: apache
-  #       XDEBUG: true
-  #       DISPLAY_PHPERROR: true
-  #       SERVER_ROOT:  /var/www/public
-  #       APP_CODE_PATH_HOST: /tmp/voya
-  #       DATA_PATH_HOST: /tmp/db
-  #   - name: PHP version check
-  #     run:  docker exec drupal_drupal_1 php -v
-  #   - name: Mongodb driver check
-  #     run:  docker exec drupal_drupal_1 php -m | grep mongo
-  #   - name: Mysql Driver check
-  #     run: docker exec drupal_drupal_1 php -m | grep mysqli
-  #   - name: Composer test
-  #     run: docker exec drupal_drupal_1 composer
-  #   - name: Application Install
-  #     run:  |
-  #       docker exec drupal_drupal_1 composer create-project --prefer-dist laravel/laravel:^7.0
-  #       docker exec drupal_drupal_1 cp /app/app.env /var/www/.env
-  #       docker exec drupal_drupal_1 composer require tcg/voyager
-  #   - name: Directory Permissions
-  #     run:  docker exec drupal_drupal_1 chown -R apache:apache storage
-  #   - name: Root Path change
-  #     run:  |
-  #       docker exec drupal_drupal_1 cp /app/httpd.conf /etc/apache2/httpd.conf
-  #       docker exec drupal_drupal_1 httpd -k graceful
-  #   - name: Root path check
-  #     run: |
-  #       docker exec drupal_drupal_1 ls -la
-  #       docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
-  #   - name: Voyager application test
-  #     run:  |
-  #       curl -i http://localhost:53487/admin/
-  #   - name: Destroy container and file
-  #     run:  |
-  #       docker-compose down
-  #       sudo rm -rf /tmp/db
-  #       sudo rm -rf /tmp/voya
-  #       echo "y" | docker image prune -a
-    
+  Apache-php81-drupal-AMD64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 8.1 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.1"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal_drupal_1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal_drupal_1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal_drupal_1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal_drupal_1 composer
+    - name: Folder check
+      run:  docker exec drupal_drupal_1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  Apache-php81-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 8.1 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.1"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  
+  Apache-php8-drupal-AMD64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 8.0 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.0"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www/
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal_drupal_1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal_drupal_1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal_drupal_1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal_drupal_1 composer
+    - name: Folder check
+      run:  docker exec drupal_drupal_1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  Apache-php8-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 8.0 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "8.0"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  
+  Apache-php7-drupal-AMD64:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 7.4 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "7.4"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www/
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal_drupal_1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal_drupal_1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal_drupal_1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal_drupal_1 composer
+    - name: Folder check
+      run:  docker exec drupal_drupal_1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal_drupal_1 chown -R apache:apache /var/www/
+        docker exec drupal_drupal_1 ls -la
+        docker exec drupal_drupal_1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal
+  Apache-php7-drupal-ARM64:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image apache, php 7.4 and Drupal
+      run: docker-compose -f "docker-compose.yml" up -d --build
+      env:
+        PHP_VERSION: "7.4"
+        BACK_END: apache
+        XDEBUG: true
+        DISPLAY_PHPERROR: true
+        SERVER_ROOT:  /var/www
+        APP_CODE_PATH_HOST: /tmp/drupal
+        DB_NAME:  test
+        DB_USER:  admin
+        DB_PASSWORD:  password
+        DATA_PATH_HOST: /tmp/db
+    - name: PHP version check
+      run:  docker exec drupal-drupal-1 php -v
+    - name: Mongodb driver check
+      run:  docker exec drupal-drupal-1 php -m | grep mongo
+    - name: Mysql Driver check
+      run: docker exec drupal-drupal-1 php -m | grep mysqli
+    - name: Composer test
+      run: docker exec drupal-drupal-1 composer
+    - name: Folder check
+      run:  docker exec drupal-drupal-1 ls -la /app/
+    - name: Application Install
+      run:  |
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+    - name: Root path check
+      run: |
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+    - name: Durpal application test
+      run:  |
+        sleep 30s
+        docker exec drupal-drupal-1 chown -R apache:apache /var/www/
+        docker exec drupal-drupal-1 ls -la
+        docker exec drupal-drupal-1 cat /etc/apache2/httpd.conf
+        curl -i http://localhost:5647
+    - name: Destroy container and file
+      run:  |
+        docker-compose down
+        echo "y" | docker image prune -a
+        sudo rm -rf /tmp/db
+        sudo rm -rf /tmp/drupal

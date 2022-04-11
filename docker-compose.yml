@@ -2,14 +2,16 @@ version: '3'
 services:
   drupal:
     build:
-      context: '${BACK_END}'
+      context: 'drupal'
       dockerfile: 'Dockerfile-${PHP_VERSION}'
       args:
         - 'BACK_END=${BACK_END}'
         - 'PHP_VERSION=${PHP_VERSION}'
         - 'DISPLAY_PHPERROR=${DISPLAY_PHPERROR}'
         - 'XDEBUG=${XDEBUG}'
-        - 'DRUPAL_INSTALL=${DRUPAL_INSTALL}'
+        - 'DB_NAME=${DB_NAME}'
+        - 'DB_USER=${DB_USER}'
+        - 'DB_PASSWORD=${DB_PASSWORD}'
     volumes:
       - '${APP_CODE_PATH_HOST}:${APP_CODE_PATH_DRUPAL}${APP_CODE_CONTAINER_FLAG}'
     ports:
