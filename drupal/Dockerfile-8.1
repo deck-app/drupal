@@ -48,6 +48,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN curl -fLk -o /app/drupal.tar.gz  "https://www.drupal.org/download-latest/tar.gz"
 RUN cd /app/ && tar -xzvf drupal.tar.gz && rm drupal.tar.gz 
 COPY settings.php /app/settings.php
+COPY .htaccess /app/.htaccess
 ARG DB_PASSWORD
 ARG DB_NAME
 ARG DB_USER

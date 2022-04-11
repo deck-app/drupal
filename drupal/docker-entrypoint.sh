@@ -17,7 +17,8 @@ else
     # chmod -R 777 /var/www/sites/default/
     # composer create-project drupal/recommended-project .
     cp /app/settings.php /var/www/sites/default/settings.php
-    chmod -R 755 /var/www/
+    cp /app/.htaccess /var/www/.htaccess
+    chmod -R 755 /var/www/ 2> /dev/null
 fi
 if [[ {BACK_END} = nginx ]] ;
 then
@@ -34,9 +35,9 @@ else
 fi
 if [[ {BACK_END} = nginx  ]] ;
 then
-    chown -R nobody:nobody /var/www
+    chown -R nobody:nobody /var/www 2> /dev/null
 else
-    chown -R apache:apache /var/www
+    chown -R apache:apache /var/www 2> /dev/null
 fi
 
 rm -rf /var/preview
