@@ -45,7 +45,7 @@ jobs:
           DISPLAY_PHPERROR: true
       - name: Build the image with php 8.0 and apache
         run: docker-compose build
-        env:
+        env: 
           PHP_VERSION: "8.0"
           BACK_END: apache
           DRUPAL_INSTALL: false
