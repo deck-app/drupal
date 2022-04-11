@@ -38,15 +38,7 @@ jobs:
       run:  docker exec drupal_drupal_1 ls -la /app/
     - name: Application Install
       run:  |
-        docker exec drupal_drupal_1 cp -a /app/drupal/* /var/www/
         docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/
-    - name: Directory Permissions
-      run:  docker exec drupal_drupal_1 chown -R nobody:nobody /var/www/sites/default/
-    - name: Root Path change
-      run:  |
-        docker exec drupal_drupal_1 cp /app/default.conf /etc/nginx/conf.d/default.conf
-        docker exec drupal_drupal_1 pkill -9 php
-        docker exec drupal_drupal_1 nginx -s reload
     - name: Root path check
       run: |
         docker exec drupal_drupal_1 ls -la
