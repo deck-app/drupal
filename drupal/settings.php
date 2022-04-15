@@ -782,4 +782,5 @@ $databases['default']['default'] = array (
 $settings['config_sync_directory'] = 'sites/default/files/config_05NxNFIdhyympe3psmZHd77CHYogCG71F6-UHQx2c985MiWa4Xg3_ZLuqx9WCdDFMuSMyNCdtA/sync';
 $settings['trusted_host_patterns'] = array(
     'stacks.run$',
+    '127.0.0.1',
   );
