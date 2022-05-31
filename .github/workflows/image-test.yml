@@ -2,7 +2,7 @@ name: Drupal
 
 on:
   schedule:
-  - cron:  '30 9 * * *'
+  - cron:  '30 5 * * *'
   push:
     branches: [ master ]
   pull_request:
@@ -34,6 +34,8 @@ jobs:
       run: docker exec drupal_drupal_1 php -m | grep mysqli
     - name: Composer test
       run: docker exec drupal_drupal_1 composer
+    - name: Host name
+      run: docker exec drupal_drupal_1 hostname
     - name: Folder check
       run:  docker exec drupal_drupal_1 ls -la /app/
     - name: Application Install
@@ -81,6 +83,8 @@ jobs:
       run: docker exec drupal-drupal-1 php -m | grep mysqli
     - name: Composer test
       run: docker exec drupal-drupal-1 composer
+    - name: Host name
+      run: docker exec drupal_drupal_1 hostname
     - name: Folder check
       run:  docker exec drupal-drupal-1 ls -la /app/
     - name: Application Install
