@@ -125,6 +125,7 @@ jobs:
         DB_USER:  admin
         DB_PASSWORD:  password
         DATA_PATH_HOST: /tmp/db
+        hostname: drupal
     - name: PHP version check
       run:  docker exec drupal_drupal_1 php -v
     - name: Mongodb driver check
