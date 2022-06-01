@@ -57,7 +57,7 @@ jobs:
         docker exec drupal_drupal_1 rm -rf /var/www/settings.php
         docker exec drupal_drupal_1 rm -rf /var/www/.htaccess
         docker exec drupal_drupal_1 curl -fLk -o /var/www/.htaccess "https://raw.githubusercontent.com/nabad600/drupal/master/.htaccess"
-        curl -i http://${docker exec drupal_drupal_1 hostname}:5647
+        curl -i http://localhost:5647/core/install.php
     - name: Destroy container and file
       run:  |
         docker-compose down
