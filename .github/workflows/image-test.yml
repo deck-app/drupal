@@ -84,8 +84,6 @@ jobs:
       run: docker exec drupal-drupal-1 php -m | grep mysqli
     - name: Composer test
       run: docker exec drupal-drupal-1 composer
-    - name: Host name
-      run: docker exec drupal_drupal_1 hostname
     - name: Folder check
       run:  docker exec drupal-drupal-1 ls -la /app/
     - name: Application Install
