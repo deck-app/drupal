@@ -20,23 +20,16 @@ else
     cp /app/.htaccess /var/www/.htaccess
     chmod -R 755 /var/www/ 2> /dev/null
 fi
-if [[ {BACK_END} = nginx ]] ;
-then
-    cp /app/default.conf /etc/nginx/conf.d/default.conf
-else
-    cp /app/httpd.conf /etc/apache2/httpd.conf
-fi
+
 rm -rf /var/preview
 if [[ {BACK_END} = nginx ]]  ; 
 then
+    cp /app/default.conf /etc/nginx/conf.d/default.conf
     nginx -s reload
-else
-    httpd -k graceful
-fi
-if [[ {BACK_END} = nginx  ]] ;
-then
     chown -R nobody:nobody /var/www 2> /dev/null
 else
+    cp /app/httpd.conf /etc/apache2/httpd.conf
+    httpd -k graceful
     chown -R apache:apache /var/www 2> /dev/null
 fi
 

@@ -44,6 +44,11 @@ RUN apk add php7-zip
 RUN apk add tar zip php7-gd php7-pdo php7-pdo_dblib php7-pdo_mysql php7-pdo_odbc php7-pdo_pgsql php7-pdo_sqlite
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
+## Linux permission issue
+ARG USER_ID
+ARG GROUP_ID
+RUN apk --no-cache add shadow
+RUN if [[ ${BACK_END} = nginx ]] ; then usermod -u ${USER_ID} nobody && groupmod -g ${GROUP_ID} nobody ; else usermod -u ${USER_ID} apache && groupmod -g ${GROUP_ID} apache ; fi
 
 #Application Download
 RUN curl -fLk -o /app/drupal.tar.gz  "https://www.drupal.org/download-latest/tar.gz"
