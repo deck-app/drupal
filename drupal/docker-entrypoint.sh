@@ -17,6 +17,10 @@ else
     # chmod -R 777 /var/www/sites/default/
     # composer create-project drupal/recommended-project .
     cp /app/settings.php /var/www/sites/default/settings.php
+    HOST=`hostname`
+    NAME=`echo $HOST | sed 's:.*-::'`
+    #HOST_NAME = echo "`hostname`" | sed 's:.*-::'
+    sed -i "s/{DB_HOSTNAME}/$NAME/g" /var/www/sites/default/settings.php
     cp /app/.htaccess /var/www/.htaccess
     chmod -R 755 /var/www/ 2> /dev/null
 fi
