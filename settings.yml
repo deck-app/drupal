@@ -82,5 +82,6 @@ system:
   ports:
     http:
       DRUPAL_HOST_HTTP_PORT
-    other:
+    others:
       - MYSQL_PORT
+
