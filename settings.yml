@@ -12,19 +12,17 @@ user:
       - nginx
     target:
       BACK_END
-  php_version:
-    label:
-      PHP version
-    hint:
-      Select a PHP version from the list above
-    type:
-      select
-    values:
-      - 7.4
-      - "8.0"
-      - 8.1
-    target:
-      PHP_VERSION
+  # php_version:
+  #   label:
+  #     PHP version
+  #   hint:
+  #     Select a PHP version from the list above
+  #   type:
+  #     select
+  #   values:
+  #     - 8.1
+  #   target:
+  #     PHP_VERSION
 
   php_error_reporting:
     label:
